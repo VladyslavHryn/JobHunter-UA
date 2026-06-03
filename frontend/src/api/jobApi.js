@@ -2,9 +2,10 @@ const envUrl = import.meta.env.VITE_API_URL || '/api';
 const API_BASE = envUrl.endsWith('/') ? envUrl.slice(0, -1) : envUrl;
 
 import * as pdfjsLib from 'pdfjs-dist';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.mjs?url';
 
-// Устанавливаем путь к воркеру для pdf.js из CDN
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Устанавливаем локальный воркер, собранный Vite
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 /**
  * Загружает PDF-резюме, парсит его на фронтенде и отправляет текст на бэкенд для извлечения данных.
@@ -22,7 +23,8 @@ export async function uploadResume(file) {
       rawText += pageText + '\n';
     }
   } catch (error) {
-    throw new Error('Не удалось прочитать PDF-файл. Убедитесь, что файл не повреждён или не защищён паролем.');
+    console.error('PDF JS Error:', error);
+    throw new Error(`Не удалось прочитать PDF-файл. Ошибка: ${error.message || error}. Убедитесь, что файл не повреждён.`);
   }
 
   if (!rawText.trim()) {
