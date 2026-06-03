@@ -181,6 +181,13 @@ export default class RobotaUaScraper extends BaseScraper {
         url = `${this.baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
       }
 
+      let logo = v.companyLogo || v.company?.logo || v.logo || '';
+      if (logo && logo.includes('defaultlogo')) {
+        logo = '';
+      } else if (logo && !logo.startsWith('http')) {
+        logo = `https://robota.ua/images/logotype/${logo.replace(/^\/+/, '')}`;
+      }
+
       return this.normalizeJob({
         id,
         title,
@@ -189,7 +196,7 @@ export default class RobotaUaScraper extends BaseScraper {
         salary: this.formatSalary(v),
         description: v.shortDescription || v.description || v.snippet || '',
         url,
-        logo: v.companyLogo || v.company?.logo || v.logo || '',
+        logo,
         postedAt: v.publishedDate || v.created_at || v.date || null,
         requirements: v.shortDescription || v.description || '',
       });
