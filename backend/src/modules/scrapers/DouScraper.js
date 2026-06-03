@@ -3,13 +3,13 @@ import BaseScraper from './BaseScraper.js';
 import config from '../../config/index.js';
 import logger from '../../utils/logger.js';
 import { httpClient, getRandomDelay, sleep } from '../../utils/httpClient.js';
+import axios from 'axios';
 
 /**
  * Адаптер для jobs.dou.ua.
- * Стратегия:
- *   - Основной поиск: https://jobs.dou.ua/vacancies/?search={keyword}
- *   - Для Intern/Junior: дополнительно https://jobs.dou.ua/first-job/
- *   - XHR-запрос для подгрузки вакансий (AJAX "Більше вакансій")
+ * Стратегия (2 уровня):
+ *   1) Apify API: unfenced-group~dou-ua-scraper — надёжно, обходит блокировки.
+ *   2) Local Cheerio scraping — fallback для локальной разработки.
  */
 export default class DouScraper extends BaseScraper {
   constructor() {
@@ -17,7 +17,82 @@ export default class DouScraper extends BaseScraper {
     this.baseUrl = 'https://jobs.dou.ua';
   }
 
-  async search(params) {
+  async search(params, env = {}) {
+    const token = env.APIFY_TOKEN || config.apifyToken;
+    const useApify = !!token;
+
+    if (useApify) {
+      logger.info('[DOU] Використання стратегії: Apify API');
+      try {
+        const results = await this.searchApify(params, token);
+        if (results.length > 0) return results;
+        logger.warn('[DOU] Apify повернув 0 результатів, пробую локальний скрапінг');
+      } catch (err) {
+        logger.warn(`[DOU] Apify помилка: ${err.message}, пробую локальний скрапінг`);
+      }
+    } else {
+      logger.info('[DOU] Використання стратегії: Local (Cheerio)');
+    }
+
+    return this.searchLocal(params);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Apify strategy
+  // ---------------------------------------------------------------------------
+
+  async searchApify(params, token) {
+    const keyword = params.keywords || (params.skills && params.skills[0]) || 'developer';
+
+    const requestBody = {
+      keywords: keyword,
+      maxItems: config.scraping.maxResultsPerSource || 60,
+    };
+
+    // Map experience level to DOU categories if available
+    if (params.level) {
+      const levelMap = { 'Intern': '0-1', 'Junior': '0-1', 'Middle': '1-3', 'Senior': '3-5' };
+      if (levelMap[params.level]) requestBody.experience = levelMap[params.level];
+    }
+
+    const apifyUrl = `https://api.apify.com/v2/acts/unfenced-group~dou-ua-scraper/run-sync-get-dataset-items?token=${token}`;
+
+    logger.info(`[DOU] Запуск Apify Actor для '${keyword}'...`);
+    const response = await axios.post(apifyUrl, requestBody, {
+      headers: { 'Content-Type': 'application/json' },
+      timeout: 120000,
+    });
+
+    const items = response.data || [];
+    logger.info(`[DOU] Apify повернув ${items.length} результатів.`);
+
+    return items.map(job => {
+      const cities = Array.isArray(job.cities) ? job.cities.join(', ') : (job.cities || '');
+      let salary = '';
+      if (job.salaryRaw) salary = job.salaryRaw;
+      else if (job.salaryMin && job.salaryMax) salary = `$${job.salaryMin}–$${job.salaryMax}`;
+      else if (job.salaryMin) salary = `від $${job.salaryMin}`;
+      else if (job.salaryMax) salary = `до $${job.salaryMax}`;
+
+      return this.normalizeJob({
+        id: job.vacancyId || '',
+        title: job.title || '',
+        company: job.company || '',
+        location: cities + (job.isRemote ? (cities ? ', Remote' : 'Remote') : ''),
+        salary,
+        description: (job.snippet || job.description || '').slice(0, 500),
+        url: job.url || '',
+        postedAt: job.publishDate || null,
+        requirements: job.snippet || job.description || '',
+      });
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Local Cheerio strategy (fallback)
+  // ---------------------------------------------------------------------------
+
+  async searchLocal(params) {
     const allJobs = [];
 
     // Main search by keywords
