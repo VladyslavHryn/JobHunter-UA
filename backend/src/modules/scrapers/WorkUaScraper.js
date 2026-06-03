@@ -98,7 +98,13 @@ export default class WorkUaScraper extends BaseScraper {
         const url = `${this.baseUrl}/jobs-${encodedKeyword}/?page=${page}`;
         logger.info(`[Work.ua] Запрос: ${url}`);
 
-        const response = await httpClient.get(url, {
+        let fetchUrl = url;
+        if (env && env.SCRAPER_API_KEY) {
+            fetchUrl = `http://api.scraperapi.com?api_key=${env.SCRAPER_API_KEY}&url=${encodeURIComponent(url)}`;
+            logger.info(`[Work.ua] Использую ScraperAPI для обхода блокировок`);
+        }
+
+        const response = await httpClient.get(fetchUrl, {
           headers: {
             'Referer': 'https://www.work.ua/',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',

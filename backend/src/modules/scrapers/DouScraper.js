@@ -17,23 +17,25 @@ export default class DouScraper extends BaseScraper {
         this.baseUrl = 'https://jobs.dou.ua';
     }
 
-    async search(params) {
+    async search(params, env = {}) {
         const allJobs = [];
 
         // Main search by keywords
         const keyword = params.keywords || (params.skills && params.skills[0]) || 'developer';
         const mainJobs = await this.scrapeListPage(
             `${this.baseUrl}/vacancies/?search=${encodeURIComponent(keyword)}`,
-            keyword
+            keyword,
+            env
         );
         allJobs.push(...mainJobs);
 
         // If intern/junior — also scrape first-job section
-        if (['Intern', 'Junior'].includes(params.level)) {
+        if (params.level && (params.level.toLowerCase() === 'junior' || params.level.toLowerCase() === 'intern')) {
             try {
                 const firstJobResults = await this.scrapeListPage(
                     `${this.baseUrl}/first-job/`,
-                    keyword
+                    keyword,
+                    env
                 );
                 const existingUrls = new Set(allJobs.map((j) => j.url));
                 for (const job of firstJobResults) {
@@ -70,7 +72,8 @@ export default class DouScraper extends BaseScraper {
                     try {
                         const catJobs = await this.scrapeListPage(
                             `${this.baseUrl}/vacancies/${slug}`,
-                            keyword
+                            keyword,
+                            env
                         );
                         const existingUrls = new Set(allJobs.map((j) => j.url));
                         for (const job of catJobs) {
@@ -89,13 +92,19 @@ export default class DouScraper extends BaseScraper {
         return allJobs;
     }
 
-    async scrapeListPage(url, keyword) {
+    async scrapeListPage(url, keyword, env = {}) {
         const jobs = [];
 
         try {
             logger.info(`[DOU] Запит: ${url}`);
 
-            const response = await httpClient.get(url, {
+            let fetchUrl = url;
+            if (env && env.SCRAPER_API_KEY) {
+                fetchUrl = `http://api.scraperapi.com?api_key=${env.SCRAPER_API_KEY}&url=${encodeURIComponent(url)}`;
+                logger.info(`[DOU] Використовую ScraperAPI для обходу блокувань`);
+            }
+
+            const response = await httpClient.get(fetchUrl, {
                 headers: {
                     'Referer': `${this.baseUrl}/vacancies/`,
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -110,7 +119,7 @@ export default class DouScraper extends BaseScraper {
             if (jobs.length > 0) {
                 await sleep(getRandomDelay());
                 try {
-                    const moreJobs = await this.loadMoreVacancies(url, csrfToken, $);
+                    const moreJobs = await this.loadMoreVacancies(url, csrfToken, $, env);
                     jobs.push(...moreJobs);
                 } catch {
                     // Ignore XHR errors — we already have initial results
@@ -192,16 +201,21 @@ export default class DouScraper extends BaseScraper {
         }
     }
 
-    async loadMoreVacancies(pageUrl, csrfToken, $) {
+    async loadMoreVacancies(pageUrl, csrfToken, $, env = {}) {
         const moreJobs = [];
 
         try {
             const xhrUrl = `${this.baseUrl}/vacancies/xhr-load/`;
             const countEl = $('div.more-btn a, a.more-btn, [class*="more"]');
             if (countEl.length === 0) return moreJobs;
+            
+            let fetchUrl = xhrUrl;
+            if (env && env.SCRAPER_API_KEY) {
+                fetchUrl = `http://api.scraperapi.com?api_key=${env.SCRAPER_API_KEY}&url=${encodeURIComponent(xhrUrl)}`;
+            }
 
             const response = await httpClient.post(
-                xhrUrl,
+                fetchUrl,
                 `csrfmiddlewaretoken=${csrfToken}&count=20`,
                 {
                     headers: {
