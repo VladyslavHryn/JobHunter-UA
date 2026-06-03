@@ -14,8 +14,9 @@ export default class JoobleScraper extends BaseScraper {
     this.baseUrl = 'https://ua.jooble.org/api';
   }
 
-  async search(params) {
-    if (!this.apiKey) {
+  async search(params, env = {}) {
+    const apiKey = env.JOOBLE_API_KEY || config.joobleApiKey;
+    if (!apiKey) {
       logger.warn('[Jooble] API-ключ не указан. Пропускаю Jooble. Укажите JOOBLE_API_KEY в .env');
       return [];
     }
@@ -32,14 +33,10 @@ export default class JoobleScraper extends BaseScraper {
           searchMode: 1,
         };
 
-        const response = await axios.post(
-          `${this.baseUrl}/${this.apiKey}`,
-          requestBody,
-          {
-            headers: { 'Content-Type': 'application/json' },
-            timeout: config.scraping.requestTimeout,
-          }
-        );
+        const response = await axios.post(`https://ua.jooble.org/api/${apiKey}`, requestBody, {
+          headers: { 'Content-Type': 'application/json' },
+          timeout: config.scraping.requestTimeout,
+        });
 
         const data = response.data;
         logger.info(`[Jooble] Запрос к API выполнен (${response.status} OK), страница ${page}`);

@@ -63,7 +63,7 @@ router.post('/', async (c) => {
 
     logger.info('Запуск пошуку вакансій...');
 
-    const { jobs, warnings, stats } = await orchestrator.searchAll(searchParams);
+    const { jobs, warnings, stats } = await orchestrator.searchAll(searchParams, c.env || process.env);
 
     const resumeContext = {
       ...resumeData,

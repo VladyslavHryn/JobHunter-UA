@@ -23,7 +23,7 @@ export default class ScraperOrchestrator {
    * @param {Object} params — параметры поиска (keywords, location, level, skills, experience)
    * @returns {Promise<{ jobs: Object[], warnings: string[], stats: Object }>}
    */
-  async searchAll(params) {
+  async searchAll(params, env = {}) {
     logger.info('═══════════════════════════════════════════');
     logger.info('Запуск поиска по всем источникам...');
     logger.info(`Ключевые слова: "${params.keywords}"`);
@@ -37,7 +37,7 @@ export default class ScraperOrchestrator {
 
     // Run all scrapers in parallel — each is isolated
     const results = await Promise.allSettled(
-      this.scrapers.map((scraper) => scraper.safeFetch(params))
+      this.scrapers.map((scraper) => scraper.safeFetch(params, env))
     );
 
     let allJobs = [];

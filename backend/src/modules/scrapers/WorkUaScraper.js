@@ -15,18 +15,21 @@ export default class WorkUaScraper extends BaseScraper {
     this.baseUrl = 'https://www.work.ua';
   }
 
-  async search(params) {
-    if (config.useApifyForWorkUa) {
+  async search(params, env = {}) {
+    const token = env.APIFY_TOKEN || config.apifyToken;
+    const useApify = !!token || config.useApifyForWorkUa;
+
+    if (useApify) {
       logger.info('[Work.ua] Использование стратегии: Apify API');
-      return this.searchApify(params);
+      return this.searchApify(params, token);
     } else {
       logger.info('[Work.ua] Использование стратегии: Local (Cheerio)');
       return this.searchLocal(params);
     }
   }
 
-  async searchApify(params) {
-    if (!config.apifyToken) {
+  async searchApify(params, token) {
+    if (!token) {
       logger.warn('[Work.ua] Apify Token не найден. Пропускаем...');
       return [];
     }
@@ -41,7 +44,7 @@ export default class WorkUaScraper extends BaseScraper {
         fetchDescription: true
       };
 
-      const apifyUrl = `https://api.apify.com/v2/acts/unfenced-group~work-ua-scraper/run-sync-get-dataset-items?token=${config.apifyToken}`;
+      const apifyUrl = `https://api.apify.com/v2/acts/unfenced-group~work-ua-scraper/run-sync-get-dataset-items?token=${token}`;
       
       logger.info(`[Work.ua] Запуск Apify Actor для '${keyword}'... это может занять минуту.`);
       const response = await axios.post(apifyUrl, requestBody, {

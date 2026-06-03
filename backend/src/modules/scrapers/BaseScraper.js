@@ -45,10 +45,10 @@ export default class BaseScraper {
   /**
    * Безопасный запуск поиска с перехватом ошибок.
    */
-  async safeFetch(params) {
+  async safeFetch(params, env = {}) {
     try {
       logger.info(`[${this.name}] Начинаю поиск: keywords="${params.keywords}", location="${params.location}"`);
-      const results = await this.search(params);
+      const results = await this.search(params, env);
       logger.info(`[${this.name}] Найдено ${results.length} вакансий`);
       return { source: this.name, jobs: results, error: null };
     } catch (err) {
