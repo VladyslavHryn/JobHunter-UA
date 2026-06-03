@@ -27,10 +27,10 @@ export default class RobotaUaScraper extends BaseScraper {
     this.rssUrl = 'https://robota.ua/rss/vacancies';
   }
 
-  async search(params) {
+  async search(params, env = {}) {
     // --- Уровень 1: официальный публичный API ---
     try {
-      const results = await this.searchViaApi(params);
+      const results = await this.searchViaApi(params, env);
       if (results.length > 0) {
         logger.info(`[Robota.ua] API вернул ${results.length} вакансий`);
         return results;
@@ -42,7 +42,7 @@ export default class RobotaUaScraper extends BaseScraper {
 
     // --- Уровень 2: RSS fallback ---
     try {
-      const results = await this.searchViaRss(params);
+      const results = await this.searchViaRss(params, env);
       if (results.length > 0) {
         logger.info(`[Robota.ua] RSS вернул ${results.length} вакансий`);
         return results;
@@ -59,7 +59,7 @@ export default class RobotaUaScraper extends BaseScraper {
   // Уровень 1: Публичный JSON API
   // ---------------------------------------------------------------------------
 
-  async searchViaApi(params) {
+  async searchViaApi(params, env = {}) {
     const allJobs = [];
     const maxPages = config.scraping.maxPagesPerSource;
     const keyword = this.buildKeyword(params);
@@ -75,7 +75,7 @@ export default class RobotaUaScraper extends BaseScraper {
 
       logger.info(`[Robota.ua] API POST ${this.apiUrl} page=${page}`);
 
-      const response = await httpClient.post(this.apiUrl, body, {
+      let fetchOptions = {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json, text/plain, */*',
@@ -87,7 +87,16 @@ export default class RobotaUaScraper extends BaseScraper {
           'sec-fetch-site': 'same-site',
         },
         timeout: 10000,
-      });
+      };
+
+      let fetchUrl = this.apiUrl;
+      if (env && env.SCRAPER_API_KEY) {
+        fetchUrl = `http://api.scraperapi.com?api_key=${env.SCRAPER_API_KEY}&url=${encodeURIComponent(this.apiUrl)}`;
+        fetchOptions.timeout = 60000;
+        fetchOptions.maxRetries = 0;
+      }
+
+      const response = await httpClient.post(fetchUrl, JSON.stringify(body), fetchOptions);
 
       // Убеждаемся что ответ — JSON (а не HTML-страница ошибки)
       const contentType = response.headers['content-type'] || '';
@@ -185,17 +194,29 @@ export default class RobotaUaScraper extends BaseScraper {
   async searchViaRss(params) {
     const keyword = this.buildKeyword(params);
     // cityId намеренно не передаём — RSS его не поддерживает
-    const url = `${this.rssUrl}?keyWords=${encodeURIComponent(keyword)}`;
-    logger.info(`[Robota.ua] RSS GET ${url}`);
+    const targetUrl = `${this.rssUrl}?keyWords=${encodeURIComponent(keyword)}`;
+    logger.info(`[Robota.ua] RSS GET ${targetUrl}`);
 
-    const response = await httpClient.get(url, {
-      headers: {
-        'Accept': 'application/rss+xml, application/xml, text/xml, */*',
-        'Referer': this.baseUrl,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      },
-      timeout: 10000,
-    });
+    const headers = {
+        'Accept': 'application/json, text/plain, */*',
+        'Content-Type': 'application/json',
+        'Origin': 'https://robota.ua',
+        'Referer': 'https://robota.ua/',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+        'Sec-Ch-Ua': '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
+        'Sec-Ch-Ua-Platform': '"Windows"',
+    };
+
+    let fetchOptions = { headers, timeout: 10000 };
+    let fetchUrl = targetUrl;
+    
+    if (env && env.SCRAPER_API_KEY) {
+      fetchUrl = `http://api.scraperapi.com?api_key=${env.SCRAPER_API_KEY}&url=${encodeURIComponent(targetUrl)}`;
+      fetchOptions.timeout = 60000;
+      fetchOptions.maxRetries = 0;
+    }
+
+    const response = await httpClient.get(fetchUrl, fetchOptions);
 
     const xml = response.data;
     logger.info(`[Robota.ua] RSS ответ: ${xml.length} байт, первые 200: ${String(xml).slice(0, 200)}`);
