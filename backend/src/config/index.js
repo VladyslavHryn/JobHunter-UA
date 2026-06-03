@@ -1,6 +1,3 @@
-import dotenv from 'dotenv';
-dotenv.config();
-
 const config = {
   port: parseInt(process.env.PORT, 10) || 3001,
   joobleApiKey: process.env.JOOBLE_API_KEY || '',
