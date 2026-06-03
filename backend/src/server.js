@@ -26,6 +26,10 @@ app.use((req, _res, next) => {
 });
 
 // ── Routes ───────────────────────────────────────────────
+app.get('/', (_req, res) => {
+  res.send('🚀 JobHunter UA Backend is running on Railway!');
+});
+
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
