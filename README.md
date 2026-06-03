@@ -4,7 +4,7 @@
 
 Кожна знайдена вакансія оцінюється за 100-бальною шкалою релевантності.
 
-🌍 **Live Demo:** [https://jobhunter-frontend-fki6.onrender.com/]
+🌍 **Live Demo:** https://jobhunter-frontend-fki6.onrender.com/
 
 
 ## Особливості
