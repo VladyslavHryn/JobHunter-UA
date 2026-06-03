@@ -12,8 +12,8 @@ import logger from '../../utils/logger.js';
  *   - Если страница не загрузилась — оставляем оригинальное описание
  */
 
-const BATCH_SIZE  = 5;    // параллельных запросов за раз
-const BATCH_DELAY = 800;  // мс между батчами
+const BATCH_SIZE  = 15;   // паралельних запитів за раз (збільшено для швидкості)
+const BATCH_DELAY = 50;   // мс між батчами (зменшено для швидкості)
 const PAGE_TIMEOUT = 8000;
 
 export async function enrichTopJobs(jobs) {

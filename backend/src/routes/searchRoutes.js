@@ -81,8 +81,8 @@ router.post('/', async (req, res, next) => {
     };
     const preRanked = scoreAndRankJobs(jobs, resumeContext);
 
-    // Шаг 3: Берём топ-50 и докачиваем полные описания
-    const TOP_N = 50;
+    // Шаг 3: Берём топ-15 и докачиваем полные описания (зменшено для швидкості)
+    const TOP_N = 15;
     const topJobs  = preRanked.slice(0, TOP_N);
     const restJobs = preRanked.slice(TOP_N);
 
