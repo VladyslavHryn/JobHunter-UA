@@ -1,0 +1,161 @@
+import * as cheerio from 'cheerio';
+import BaseScraper from './BaseScraper.js';
+import config from '../../config/index.js';
+import logger from '../../utils/logger.js';
+import { httpClient, getRandomDelay, sleep } from '../../utils/httpClient.js';
+
+/**
+ * Адаптер для work.ua — веб-скрапинг через Cheerio.
+ * URL-паттерн: https://www.work.ua/jobs-{keyword}/?page={n}
+ */
+export default class WorkUaScraper extends BaseScraper {
+  constructor() {
+    super('Work.ua');
+    this.baseUrl = 'https://www.work.ua';
+  }
+
+  async search(params) {
+    const allJobs = [];
+    const maxPages = config.scraping.maxPagesPerSource;
+
+    // Build search keyword from job title + top skills
+    const keyword = this.buildSearchKeyword(params);
+    const encodedKeyword = encodeURIComponent(keyword).replace(/%20/g, '+');
+
+    for (let page = 1; page <= maxPages; page++) {
+      try {
+        const url = `${this.baseUrl}/jobs-${encodedKeyword}/?page=${page}`;
+        logger.info(`[Work.ua] Запрос: ${url}`);
+
+        const response = await httpClient.get(url, {
+          headers: {
+            'Referer': 'https://www.work.ua/',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          },
+        });
+
+        const $ = cheerio.load(response.data);
+        const jobCards = $('div.card.card-hover, div.job-link, div[class*="card"]').has('h2 a');
+
+        if (jobCards.length === 0) {
+          // Try alternative selector
+          const altCards = $('div#pjax-job-list div.card, .card-visited');
+          if (altCards.length === 0 && page === 1) {
+            logger.warn(`[Work.ua] Не найдено вакансий на странице ${page}. Возможно, структура страницы изменилась.`);
+          }
+          if (altCards.length === 0) break;
+
+          altCards.each((_i, el) => {
+            const job = this.parseJobCard($, $(el));
+            if (job) allJobs.push(job);
+          });
+        } else {
+          jobCards.each((_i, el) => {
+            const job = this.parseJobCard($, $(el));
+            if (job) allJobs.push(job);
+          });
+        }
+
+        logger.info(`[Work.ua] Страница ${page}: найдено ${jobCards.length} вакансий`);
+
+        // Check if there's a next page
+        const hasNextPage = $('ul.pagination li.active + li a').length > 0 ||
+                           $('a[aria-label="Next"]').length > 0;
+        if (!hasNextPage) break;
+
+        // Polite delay
+        if (page < maxPages) {
+          await sleep(getRandomDelay());
+        }
+      } catch (err) {
+        logger.error(`[Work.ua] Ошибка на странице ${page}: ${err.message}`);
+        if (page === 1) throw err;
+        break;
+      }
+    }
+
+    logger.info(`[Work.ua] Парсинг завершен, найдено ${allJobs.length} вакансий`);
+    return allJobs;
+  }
+
+  parseJobCard($, $card) {
+    try {
+      // Title and URL
+      const $titleLink = $card.find('h2 a').first();
+      if (!$titleLink.length) return null;
+
+      const title = $titleLink.text().trim();
+      const relativeUrl = $titleLink.attr('href') || '';
+      const url = relativeUrl.startsWith('http') ? relativeUrl : `${this.baseUrl}${relativeUrl}`;
+
+      // Company
+      const company = $card.find('div.add-top-xs > span > b, div.add-top-xs b, span.company-name, div.mt-xs b, div.mt-xs > span.strong-600, .mr-xs span, .mr-xs strong, span.strong-600')
+        .first()
+        .text()
+        .trim() || $card.find('b, strong').first().text().trim() || '';
+
+      // Salary
+      const salaryEl = $card.find('span.text-muted, span[title], div.salary');
+      let salary = '';
+      salaryEl.each((_i, el) => {
+        const text = $(el).text().trim();
+        if (text.match(/грн|uah|usd|\$/i) || text.match(/\d+\s*[-–—]\s*\d+/)) {
+          salary = text;
+          return false;
+        }
+      });
+
+      // Description
+      let description = $card.find('p.overflow, p.cut-bottom, p.text-muted.overflow, div.cut-top')
+        .first()
+        .text()
+        .trim();
+
+      if (!description) {
+        // Fallback: take the longest <p> tag in the card that doesn't look like meta info
+        let longestP = '';
+        $card.find('p').each((_i, el) => {
+          const text = $(el).text().trim();
+          if (text.length > longestP.length && !text.includes('грн') && !text.includes('·')) {
+            longestP = text;
+          }
+        });
+        description = longestP;
+      }
+
+      // Location
+      const metaText = $card.find('.text-muted, .add-top-xs').text();
+      let location = '';
+      const cityMatch = metaText.match(/(Київ|Харків|Одеса|Дніпро|Львів|Запоріжжя|Вінниця|Полтава|Remote|Удаленно|Віддалено)/i);
+      if (cityMatch) {
+        location = cityMatch[1];
+      }
+
+      if (!title) return null;
+
+      return this.normalizeJob({
+        title,
+        company,
+        location,
+        salary,
+        description: description || '',
+        url,
+        requirements: description || '',
+      });
+    } catch (err) {
+      logger.warn(`[Work.ua] Ошибка парсинга карточки: ${err.message}`);
+      return null;
+    }
+  }
+
+  buildSearchKeyword(params) {
+    const parts = [];
+    if (params.keywords) {
+      parts.push(params.keywords);
+    }
+    if (params.skills && params.skills.length > 0) {
+      parts.push(...params.skills.slice(0, 2));
+    }
+    return parts.join(' ') || 'developer';
+  }
+}

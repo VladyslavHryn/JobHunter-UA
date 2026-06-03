@@ -1,0 +1,137 @@
+.filters-panel {
+  padding: var(--space-4) 0;
+}
+
+.filters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+.filters-header h3 {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.filters-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+  align-items: flex-end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 180px;
+}
+
+.filter-group.flex-2 {
+  flex: 2;
+  min-width: 280px;
+}
+
+.filter-group label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+}
+
+.filter-group label span {
+  color: var(--color-accent-text);
+  font-weight: 600;
+}
+
+.filter-select {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  padding: 8px 12px;
+  border-radius: var(--border-radius-sm);
+  appearance: none;
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  transition: border-color var(--transition-fast);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a90a8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+}
+
+.filter-select:focus {
+  border-color: var(--color-accent);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(88, 112, 185, 0.1);
+}
+
+.filter-select option {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+.source-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.source-toggle {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  padding: 6px 14px;
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  transition: all var(--transition-fast);
+}
+
+.source-toggle:hover:not(.disabled) {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border-color: var(--color-text-muted);
+}
+
+.source-toggle:active:not(.disabled) {
+  transform: scale(0.97);
+}
+
+.source-toggle.active {
+  background: var(--color-text-primary);
+  border-color: var(--color-text-primary);
+  color: var(--color-bg-primary);
+}
+
+.source-toggle.disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.results-count {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  font-weight: 600;
+  background: var(--color-bg-tertiary);
+  padding: 4px 12px;
+  border-radius: var(--border-radius-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 768px) {
+  .filters-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-group {
+    min-width: 0;
+  }
+}

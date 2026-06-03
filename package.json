@@ -1,0 +1,9 @@
+{
+  "name": "job-hunter-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install-all": "cd backend && npm install && cd ../frontend && npm install",
+    "dev": "npx concurrently -c \"blue,green\" -n \"backend,frontend\" \"cd backend && npm run dev\" \"cd frontend && npm run dev\""
+  }
+}

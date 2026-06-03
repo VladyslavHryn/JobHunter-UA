@@ -1,0 +1,215 @@
+.job-card {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-6) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  transition: background-color var(--transition-fast);
+}
+
+.job-card:hover {
+  background: var(--color-bg-secondary);
+}
+
+.job-card-header {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+  margin-bottom: var(--space-3);
+}
+
+.company-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--border-radius-sm);
+  background: var(--color-bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+}
+
+.company-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: white;
+}
+
+.company-initial {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.job-info-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.job-title {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  line-height: 1.35;
+  margin-bottom: 2px;
+  letter-spacing: -0.01em;
+}
+
+.job-title a {
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.company-name {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.job-source-badge {
+  flex-shrink: 0;
+}
+
+.badge {
+  padding: 3px 8px;
+  border-radius: var(--border-radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: transparent;
+}
+
+/* Source colors */
+.source-jooble { color: var(--color-jooble); border: 1px solid var(--color-jooble); }
+.source-workua { color: var(--color-workua); border: 1px solid var(--color-workua); }
+.source-robotaua { color: var(--color-robota); border: 1px solid var(--color-robota); }
+.source-dou { color: var(--color-dou); border: 1px solid var(--color-dou); }
+
+.job-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.meta-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.salary-pill {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.job-description {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  margin-bottom: var(--space-2);
+  max-width: 75ch;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.job-description.expanded {
+  -webkit-line-clamp: unset;
+}
+
+.toggle-desc-btn {
+  align-self: flex-start;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  margin-bottom: var(--space-4);
+  padding: 0;
+  transition: color var(--transition-fast);
+}
+
+.toggle-desc-btn:hover {
+  color: var(--color-text-muted);
+}
+
+.job-card-footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-top: auto;
+}
+
+.apply-btn {
+  padding: 8px 16px;
+  border-radius: var(--border-radius-sm);
+  color: var(--color-bg-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  transition: all var(--transition-fast);
+  background: var(--color-text-primary);
+  display: inline-flex;
+  align-items: center;
+}
+
+.apply-btn:hover {
+  background: var(--color-text-secondary);
+}
+
+.apply-btn:active {
+  transform: scale(0.97);
+}
+
+/* Match Details Styling */
+.job-match-details {
+  background: var(--color-bg-secondary);
+  border-radius: var(--border-radius-sm);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-size-sm);
+  border: 1px solid var(--color-border);
+  flex: 1;
+  max-width: 500px;
+}
+
+.experience-req {
+  margin-bottom: var(--space-2);
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.match-pros, .match-cons {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--space-2) 0;
+}
+
+.match-pros:last-child, .match-cons:last-child {
+  margin-bottom: 0;
+}
+
+.match-pros li {
+  color: var(--color-success);
+  margin-bottom: 4px;
+}
+
+.match-cons li {
+  color: var(--color-warning);
+  margin-bottom: 4px;
+}
+
+.salary-pill.highlight {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+/* Score */
+.score-high { color: var(--color-success); }
+.score-mid { color: var(--color-warning); }
+.score-low { color: var(--color-error); }
