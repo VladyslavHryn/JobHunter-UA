@@ -1,0 +1,6 @@
+name = "jobhunter-ua"
+main = "src/index.js"
+compatibility_date = "2024-05-29"
+compatibility_flags = ["nodejs_compat"]
+
+# Node.js compatibility mode is required for winston, axios, and pdf-parse

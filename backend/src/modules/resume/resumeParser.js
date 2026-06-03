@@ -1,20 +1,13 @@
-import fs from 'fs';
 import pdf from 'pdf-parse';
 import logger from '../../utils/logger.js';
 
 /**
- * Парсит PDF-файл и извлекает текстовое содержимое.
- * @param {string} filePath — путь к PDF-файлу
+ * Парсит PDF-файл из буфера в памяти.
+ * @param {Buffer} dataBuffer — данные PDF-файла
  * @returns {Promise<string>} — текст резюме
  */
-export async function parseResumePdf(filePath) {
-  logger.info(`Начинаю парсинг PDF: ${filePath}`);
-
-  if (!fs.existsSync(filePath)) {
-    throw new Error(`Файл не найден: ${filePath}`);
-  }
-
-  const dataBuffer = fs.readFileSync(filePath);
+export async function parseResumePdf(dataBuffer) {
+  logger.info(`Начинаю парсинг PDF (размер: ${dataBuffer.byteLength} байт)`);
 
   if (dataBuffer.length === 0) {
     throw new Error('Загруженный файл пуст');

@@ -1,29 +1,22 @@
-import { Router } from 'express';
+import { Hono } from 'hono';
 import ScraperOrchestrator from '../modules/scrapers/ScraperOrchestrator.js';
 import { scoreAndRankJobs } from '../modules/matching/scoringEngine.js';
 import { enrichTopJobs } from '../modules/scrapers/descriptionEnricher.js';
 import logger from '../utils/logger.js';
 
-const router = Router();
+const router = new Hono();
 const orchestrator = new ScraperOrchestrator();
 
 /**
  * POST /api/search
  * Запускает поиск вакансий по данным из резюме.
- *
- * Архитектура:
- *  1. Собираем все вакансии со списков (быстро)
- *  2. Быстрый предварительный скоринг по краткому описанию
- *  3. Берём топ-50 и докачиваем полные страницы (батчами по 5, с паузой)
- *  4. Финальный скоринг с полным текстом (включая требования к опыту)
- *  5. Остаток вакансий идёт в конец со своим предварительным скором
  */
-router.post('/', async (req, res, next) => {
+router.post('/', async (c) => {
   try {
-    const resumeData = req.body.resumeData || {};
-    const overrides = req.body.overrides || {};
+    const body = await c.req.json().catch(() => ({}));
+    const resumeData = body.resumeData || {};
+    const overrides = body.overrides || {};
 
-    // Явный опыт из UI-поля имеет приоритет над данными резюме
     const userExperience = overrides?.experience !== undefined
       ? Number(overrides.experience)
       : (resumeData.experience || 0);
@@ -62,18 +55,16 @@ router.post('/', async (req, res, next) => {
     };
 
     if (!searchParams.keywords) {
-      return res.status(400).json({
+      return c.json({
         success: false,
         error: 'Не вдалось визначити ключові слова для пошуку. Вкажіть посаду або навички вручну.',
-      });
+      }, 400);
     }
 
     logger.info('Запуск пошуку вакансій...');
 
-    // Шаг 1: Собираем все вакансии со списков
     const { jobs, warnings, stats } = await orchestrator.searchAll(searchParams);
 
-    // Шаг 2: Быстрый предварительный скоринг по краткому описанию
     const resumeContext = {
       ...resumeData,
       experience: userExperience,
@@ -81,7 +72,6 @@ router.post('/', async (req, res, next) => {
     };
     const preRanked = scoreAndRankJobs(jobs, resumeContext);
 
-    // Шаг 3: Берём топ-15 и докачиваем полные описания (зменшено для швидкості)
     const TOP_N = 15;
     const topJobs  = preRanked.slice(0, TOP_N);
     const restJobs = preRanked.slice(TOP_N);
@@ -89,7 +79,6 @@ router.post('/', async (req, res, next) => {
     logger.info(`Докачую повні описи для топ-${topJobs.length} вакансій...`);
     const enrichedTop = await enrichTopJobs(topJobs);
 
-    // Шаг 4: Финальный скоринг с полным текстом
     const finalTopRanked = scoreAndRankJobs(enrichedTop, resumeContext);
 
     const finalRanked = [
@@ -99,9 +88,10 @@ router.post('/', async (req, res, next) => {
 
     logger.info(`Пошук завершено. Відправляю ${finalRanked.length} вакансій клієнту.`);
 
-    res.json({ success: true, jobs: finalRanked, warnings, stats });
+    return c.json({ success: true, jobs: finalRanked, warnings, stats });
   } catch (err) {
-    next(err);
+    logger.error(`Search error: ${err.message}`);
+    return c.json({ success: false, error: err.message }, 500);
   }
 });
 

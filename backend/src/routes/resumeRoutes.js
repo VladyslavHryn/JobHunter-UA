@@ -1,53 +1,56 @@
-import { Router } from 'express';
-import fs from 'fs';
-import upload from '../middleware/upload.js';
+import { Hono } from 'hono';
 import { parseResumePdf } from '../modules/resume/resumeParser.js';
 import { extractResumeData } from '../modules/resume/resumeExtractor.js';
 import logger from '../utils/logger.js';
 
-const router = Router();
+const router = new Hono();
 
 /**
  * POST /api/resume/upload
- * Загружает PDF-резюме, парсит и извлекает данные.
+ * Загружает PDF-резюме, парсит и извлекает данные (in-memory).
  * 
  * Request: multipart/form-data, field "resume" (PDF, max 5MB)
  * Response: { success, resumeData: { jobTitle, skills, experience, level, location } }
  */
-router.post('/upload', upload.single('resume'), async (req, res, next) => {
+router.post('/upload', async (c) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({
+    const body = await c.req.parseBody();
+    const file = body['resume'];
+
+    if (!file || typeof file === 'string') {
+      return c.json({
         success: false,
         error: 'Файл не загружен. Пожалуйста, выберите PDF-файл резюме.',
-      });
+      }, 400);
     }
 
-    logger.info(`Получен файл: ${req.file.originalname} (${(req.file.size / 1024).toFixed(1)} КБ)`);
+    if (file.size > 5 * 1024 * 1024) {
+      return c.json({
+        success: false,
+        error: 'Файл слишком большой. Максимальный размер: 5 МБ.',
+      }, 400);
+    }
 
-    // Parse PDF → raw text
-    const rawText = await parseResumePdf(req.file.path);
+    logger.info(`Получен файл: ${file.name} (${(file.size / 1024).toFixed(1)} КБ)`);
+
+    // Parse PDF → raw text in-memory
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const rawText = await parseResumePdf(buffer);
 
     // Extract structured data
     const resumeData = extractResumeData(rawText);
 
-    // Clean up the uploaded file
-    try {
-      fs.unlinkSync(req.file.path);
-    } catch {
-      // Ignore cleanup errors
-    }
-
-    res.json({
+    return c.json({
       success: true,
       resumeData,
     });
   } catch (err) {
-    // Clean up on error too
-    if (req.file?.path) {
-      try { fs.unlinkSync(req.file.path); } catch { /* ignore */ }
-    }
-    next(err);
+    logger.error(`Upload error: ${err.message}`);
+    return c.json({
+      success: false,
+      error: err.message || 'Ошибка обработки файла.',
+    }, 500);
   }
 });
 
