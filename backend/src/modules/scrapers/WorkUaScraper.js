@@ -3,6 +3,7 @@ import BaseScraper from './BaseScraper.js';
 import config from '../../config/index.js';
 import logger from '../../utils/logger.js';
 import { httpClient, getRandomDelay, sleep } from '../../utils/httpClient.js';
+import axios from 'axios';
 
 /**
  * Адаптер для work.ua — веб-скрапинг через Cheerio.
@@ -15,6 +16,59 @@ export default class WorkUaScraper extends BaseScraper {
   }
 
   async search(params) {
+    if (config.useApifyForWorkUa) {
+      logger.info('[Work.ua] Использование стратегии: Apify API');
+      return this.searchApify(params);
+    } else {
+      logger.info('[Work.ua] Использование стратегии: Local (Cheerio)');
+      return this.searchLocal(params);
+    }
+  }
+
+  async searchApify(params) {
+    if (!config.apifyToken) {
+      logger.warn('[Work.ua] Apify Token не найден. Пропускаем...');
+      return [];
+    }
+
+    try {
+      const keyword = this.buildSearchKeyword(params);
+      
+      const requestBody = {
+        keywords: keyword,
+        location: params.location === 'Remote' ? '' : (params.location || ''),
+        maxItems: config.scraping.maxResultsPerSource || 60,
+        fetchDescription: true
+      };
+
+      const apifyUrl = `https://api.apify.com/v2/acts/unfenced-group~work-ua-scraper/run-sync-get-dataset-items?token=${config.apifyToken}`;
+      
+      logger.info(`[Work.ua] Запуск Apify Actor для '${keyword}'... это может занять минуту.`);
+      const response = await axios.post(apifyUrl, requestBody, {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 120000
+      });
+
+      const items = response.data || [];
+      logger.info(`[Work.ua] Apify вернул ${items.length} результатов.`);
+
+      return items.map(job => this.normalizeJob({
+        title: job.title || '',
+        company: job.company || '',
+        location: job.location || '',
+        salary: job.salaryRaw || '',
+        description: job.descriptionText || job.descriptionSnippet || '',
+        url: job.url || '',
+        requirements: job.skills ? job.skills.join(', ') : ''
+      }));
+
+    } catch (error) {
+      logger.error(`[Work.ua] Ошибка при вызове Apify API: ${error.message}`);
+      return [];
+    }
+  }
+
+  async searchLocal(params) {
     const allJobs = [];
     const maxPages = config.scraping.maxPagesPerSource;
 

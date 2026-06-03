@@ -1,8 +1,10 @@
 const config = {
   port: parseInt(process.env.PORT, 10) || 3001,
   joobleApiKey: process.env.JOOBLE_API_KEY || '',
+  apifyToken: process.env.APIFY_TOKEN || '',
   logLevel: process.env.LOG_LEVEL || 'info',
   nodeEnv: process.env.NODE_ENV || 'development',
+  useApifyForWorkUa: process.env.NODE_ENV === 'production',
   upload: {
     maxFileSize: 5 * 1024 * 1024, // 5MB
     allowedMimeTypes: ['application/pdf'],
