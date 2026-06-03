@@ -98,18 +98,22 @@ export default class DouScraper extends BaseScraper {
         try {
             logger.info(`[DOU] Запит: ${url}`);
 
-            let fetchUrl = url;
-            if (env && env.SCRAPER_API_KEY) {
-                fetchUrl = `http://api.scraperapi.com?api_key=${env.SCRAPER_API_KEY}&url=${encodeURIComponent(url)}`;
-                logger.info(`[DOU] Використовую ScraperAPI для обходу блокувань`);
-            }
-
-            const response = await httpClient.get(fetchUrl, {
+            let fetchOptions = {
                 headers: {
                     'Referer': `${this.baseUrl}/vacancies/`,
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                 },
-            });
+            };
+
+            let fetchUrl = url;
+            if (env && env.SCRAPER_API_KEY) {
+                fetchUrl = `http://api.scraperapi.com?api_key=${env.SCRAPER_API_KEY}&url=${encodeURIComponent(url)}`;
+                logger.info(`[DOU] Использую ScraperAPI для обхода блокировок`);
+                fetchOptions.timeout = 60000;
+                fetchOptions.maxRetries = 0;
+            }
+
+            const response = await httpClient.get(fetchUrl, fetchOptions);
 
             const $ = cheerio.load(response.data);
             const csrfToken = $('input[name="csrfmiddlewaretoken"]').val() || '';
@@ -209,21 +213,25 @@ export default class DouScraper extends BaseScraper {
             const countEl = $('div.more-btn a, a.more-btn, [class*="more"]');
             if (countEl.length === 0) return moreJobs;
             
+            let fetchOptions = {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Referer': pageUrl,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            };
+            
             let fetchUrl = xhrUrl;
             if (env && env.SCRAPER_API_KEY) {
                 fetchUrl = `http://api.scraperapi.com?api_key=${env.SCRAPER_API_KEY}&url=${encodeURIComponent(xhrUrl)}`;
+                fetchOptions.timeout = 60000;
+                fetchOptions.maxRetries = 0;
             }
 
             const response = await httpClient.post(
                 fetchUrl,
                 `csrfmiddlewaretoken=${csrfToken}&count=20`,
-                {
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'Referer': pageUrl,
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                }
+                fetchOptions
             );
 
             if (response.data && response.data.html) {

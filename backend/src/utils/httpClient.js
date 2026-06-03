@@ -55,11 +55,12 @@ class HttpClient {
       
       // Cloudflare blocks datacenter IPs, we should fail fast on 403
       const isRetryable = status === 429 || status === 503 || status === 502 || status === 504;
+      const maxRetries = options.maxRetries !== undefined ? options.maxRetries : config.scraping.maxRetries;
 
       if (!response.ok) {
-        if (isRetryable && retryCount < config.scraping.maxRetries) {
+        if (isRetryable && retryCount < maxRetries) {
           const backoff = Math.pow(3, retryCount + 1) * 1000;
-          logger.warn(`HTTP ${status} → Retry ${retryCount + 1}/${config.scraping.maxRetries} in ${backoff}ms: ${url}`);
+          logger.warn(`HTTP ${status} — Retry ${retryCount + 1}/${maxRetries} in ${backoff}ms: ${url}`);
           await sleep(backoff);
           return this.request(url, options, retryCount + 1);
         }
@@ -75,10 +76,11 @@ class HttpClient {
 
     } catch (error) {
       clearTimeout(timeoutId);
+      const maxRetries = options.maxRetries !== undefined ? options.maxRetries : config.scraping.maxRetries;
       
-      if (error.name === 'AbortError' && retryCount < config.scraping.maxRetries) {
+      if (error.name === 'AbortError' && retryCount < maxRetries) {
         const backoff = Math.pow(3, retryCount + 1) * 1000;
-        logger.warn(`HTTP Timeout → Retry ${retryCount + 1}/${config.scraping.maxRetries} in ${backoff}ms: ${url}`);
+        logger.warn(`HTTP Timeout — Retry ${retryCount + 1}/${maxRetries} in ${backoff}ms: ${url}`);
         await sleep(backoff);
         return this.request(url, options, retryCount + 1);
       }

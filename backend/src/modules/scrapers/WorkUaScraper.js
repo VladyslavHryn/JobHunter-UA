@@ -98,13 +98,7 @@ export default class WorkUaScraper extends BaseScraper {
         const url = `${this.baseUrl}/jobs-${encodedKeyword}/?page=${page}`;
         logger.info(`[Work.ua] Запрос: ${url}`);
 
-        let fetchUrl = url;
-        if (env && env.SCRAPER_API_KEY) {
-            fetchUrl = `http://api.scraperapi.com?api_key=${env.SCRAPER_API_KEY}&url=${encodeURIComponent(url)}`;
-            logger.info(`[Work.ua] Использую ScraperAPI для обхода блокировок`);
-        }
-
-        const response = await httpClient.get(fetchUrl, {
+        let fetchOptions = {
           headers: {
             'Referer': 'https://www.work.ua/',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -119,7 +113,17 @@ export default class WorkUaScraper extends BaseScraper {
             'Sec-Fetch-User': '?1',
             'Upgrade-Insecure-Requests': '1'
           }
-        });
+        };
+
+        let fetchUrl = url;
+        if (env && env.SCRAPER_API_KEY) {
+            fetchUrl = `http://api.scraperapi.com?api_key=${env.SCRAPER_API_KEY}&url=${encodeURIComponent(url)}`;
+            logger.info(`[Work.ua] Использую ScraperAPI для обхода блокировок`);
+            fetchOptions.timeout = 60000;
+            fetchOptions.maxRetries = 0;
+        }
+
+        const response = await httpClient.get(fetchUrl, fetchOptions);
 
         const $ = cheerio.load(response.data);
         const jobCards = $('div.card.card-hover, div.job-link, div[class*="card"]').has('h2 a');
