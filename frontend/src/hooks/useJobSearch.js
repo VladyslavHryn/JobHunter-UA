@@ -1,24 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { uploadResume, searchJobs } from '../api/jobApi.js';
 
-/**
- * Custom hook: управление полным циклом поиска вакансий.
- * States: idle → uploading → parsed → searching → done / error
- */
-export function useJobSearch() {
-  const [status, setStatus] = useState('idle'); // idle | uploading | parsed | searching | done | error
-  const [resumeData, setResumeData] = useState(null);
-  const [jobs, setJobs] = useState([]);
-  const [warnings, setWarnings] = useState([]);
-  const [stats, setStats] = useState(null);
-  const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({
-    city: '',
-    sources: [],
-    minScore: 0,
-    minSalary: 0,
-  });
-
 export function parseMaxSalaryUah(salaryStr) {
   if (!salaryStr) return 0;
   const s = String(salaryStr).toLowerCase().replace(/\s/g, '');
@@ -79,6 +61,24 @@ function extractCities(locationString) {
   }
   return Array.from(cities);
 }
+
+/**
+ * Custom hook: управление полным циклом поиска вакансий.
+ * States: idle → uploading → parsed → searching → done / error
+ */
+export function useJobSearch() {
+  const [status, setStatus] = useState('idle'); // idle | uploading | parsed | searching | done | error
+  const [resumeData, setResumeData] = useState(null);
+  const [jobs, setJobs] = useState([]);
+  const [warnings, setWarnings] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [error, setError] = useState(null);
+  const [filters, setFilters] = useState({
+    city: '',
+    sources: [],
+    minScore: 0,
+    minSalary: 0,
+  });
 
   /**
    * Шаг 1: Загрузка резюме
