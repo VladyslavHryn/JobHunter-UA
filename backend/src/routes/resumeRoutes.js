@@ -53,7 +53,7 @@ router.post('/upload', async (c) => {
     }, 500);
   }
 });
-});
+
 
 /**
  * POST /api/resume/extract
