@@ -12,7 +12,7 @@ export default class ScraperOrchestrator {
   constructor() {
     this.scrapers = [
       new JoobleScraper(),
-      new WorkUaScraper(),
+      // new WorkUaScraper(), // Тимчасово відключено через агресивний Cloudflare захист
       new RobotaUaScraper(),
       new DouScraper(),
     ];
