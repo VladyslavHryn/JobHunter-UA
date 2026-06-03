@@ -16,7 +16,25 @@ export function useJobSearch() {
     city: '',
     sources: [],
     minScore: 0,
+    minSalary: 0,
   });
+
+export function parseMaxSalaryUah(salaryStr) {
+  if (!salaryStr) return 0;
+  const s = String(salaryStr).toLowerCase().replace(/\s/g, '');
+  const matches = s.match(/\d+/g);
+  if (!matches) return 0;
+  
+  let maxNum = Math.max(...matches.map(Number));
+  
+  let isUSD = s.includes('$') || s.includes('usd') || s.includes('дол');
+  if (s.includes('eur') || s.includes('євр') || s.includes('евр') || s.includes('€')) {
+      maxNum *= 44;
+  } else if (isUSD || (maxNum < 15000 && maxNum > 300)) {
+      maxNum *= 41.5;
+  }
+  return maxNum;
+}
 
 function extractCities(locationString) {
   if (!locationString) return [];
@@ -140,6 +158,11 @@ function extractCities(locationString) {
       result = result.filter((j) => (j.score || 0) >= filters.minScore);
     }
 
+    // Filter by minimum salary
+    if (filters.minSalary > 0) {
+      result = result.filter((j) => parseMaxSalaryUah(j.salary) >= filters.minSalary);
+    }
+
     return result;
   }, [jobs, filters]);
 
@@ -181,7 +204,7 @@ function extractCities(locationString) {
     setWarnings([]);
     setStats(null);
     setError(null);
-    setFilters({ city: '', sources: [], minScore: 0 });
+    setFilters({ city: '', sources: [], minScore: 0, minSalary: 0 });
   }, []);
 
   return {

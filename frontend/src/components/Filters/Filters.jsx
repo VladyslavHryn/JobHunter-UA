@@ -80,6 +80,29 @@ export default function Filters({
             <option value="80">Ідеальне (80%+)</option>
           </select>
         </div>
+
+        <div className="filter-group">
+          <label>Мін. зарплата</label>
+          <div className="salary-slider-container">
+            <input 
+              type="range" 
+              className="filter-slider"
+              min="0" 
+              max="200000" 
+              step="5000"
+              value={currentFilters.minSalary || 0}
+              onChange={(e) => onFilterChange({ minSalary: parseInt(e.target.value, 10) })}
+            />
+            <div className="salary-slider-labels">
+              <span>{currentFilters.minSalary ? `${currentFilters.minSalary.toLocaleString()} грн` : 'Будь-яка'}</span>
+              {currentFilters.minSalary > 0 && (
+                <span className="usd-label">
+                  ≈ {Math.round(currentFilters.minSalary / 41.5)}$
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

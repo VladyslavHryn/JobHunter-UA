@@ -135,3 +135,23 @@
     min-width: 0;
   }
 }
+
+/* Slider */
+.filter-slider {
+  width: 100%;
+  margin-top: 4px;
+  accent-color: var(--color-accent);
+}
+
+.salary-slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-xs);
+  margin-top: 4px;
+  color: var(--color-text-muted);
+}
+
+.usd-label {
+  color: var(--color-accent-text);
+  font-weight: 500;
+}
