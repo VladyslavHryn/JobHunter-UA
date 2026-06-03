@@ -99,13 +99,24 @@ export default class RobotaUaScraper extends BaseScraper {
       const response = await httpClient.post(fetchUrl, JSON.stringify(body), fetchOptions);
 
       // Убеждаемся что ответ — JSON (а не HTML-страница ошибки)
-      const contentType = response.headers['content-type'] || '';
+      const contentType = response.headers && typeof response.headers.get === 'function' 
+        ? response.headers.get('content-type') || ''
+        : response.headers['content-type'] || '';
+        
       if (!contentType.includes('application/json')) {
         logger.warn(`[Robota.ua] Неожиданный Content-Type: ${contentType}`);
         break;
       }
 
-      const data = response.data;
+      let data = response.data;
+      if (typeof data === 'string') {
+        try {
+          data = JSON.parse(data);
+        } catch (e) {
+          logger.warn(`[Robota.ua] Ошибка парсинга JSON: ${e.message}`);
+          break;
+        }
+      }
 
       // API может вернуть вакансии в разных полях в зависимости от версии
       const vacancies = data.documents || data.vacancies || data.data || data.items || [];
@@ -191,7 +202,7 @@ export default class RobotaUaScraper extends BaseScraper {
   // Уровень 2: RSS fallback
   // ---------------------------------------------------------------------------
 
-  async searchViaRss(params) {
+  async searchViaRss(params, env = {}) {
     const keyword = this.buildKeyword(params);
     // cityId намеренно не передаём — RSS его не поддерживает
     const targetUrl = `${this.rssUrl}?keyWords=${encodeURIComponent(keyword)}`;
