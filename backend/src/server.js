@@ -9,8 +9,9 @@ import errorHandler from './middleware/errorHandler.js';
 const app = express();
 
 // ── Middleware ────────────────────────────────────────────
+// Дозволяємо запити з локалхосту та з будь-якого задеплоєного фронтенду
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'],
+  origin: true, // Дозволяє всі origin, ідеально для Vercel
   credentials: true,
 }));
 app.use(express.json({ limit: '10mb' }));
@@ -18,7 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Request logging
 app.use((req, _res, next) => {
-  if (req.url !== '/api/health') {
+  if (req.url !== '/api/health' && req.url !== '/') {
     logger.info(`→ ${req.method} ${req.url}`);
   }
   next();
@@ -36,7 +37,7 @@ app.use('/api/search', searchRoutes);
 app.use(errorHandler);
 
 // ── Start Server ─────────────────────────────────────────
-const server = app.listen(config.port, () => {
+const server = app.listen(config.port, '0.0.0.0', () => {
   logger.info('═══════════════════════════════════════════');
   logger.info(`🚀 JobHunter UA Backend запущен`);
   logger.info(`   Порт: ${config.port}`);
