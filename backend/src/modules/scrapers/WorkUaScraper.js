@@ -112,7 +112,7 @@ export default class WorkUaScraper extends BaseScraper {
             'Sec-Fetch-Site': 'same-origin',
             'Sec-Fetch-User': '?1',
             'Upgrade-Insecure-Requests': '1'
-          },
+          }
         });
 
         const $ = cheerio.load(response.data);
@@ -150,7 +150,6 @@ export default class WorkUaScraper extends BaseScraper {
         }
       } catch (err) {
         logger.error(`[Work.ua] Ошибка на странице ${page}: ${err.message}`);
-        if (page === 1) throw err;
         break;
       }
     }
