@@ -1,15 +1,38 @@
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const envUrl = import.meta.env.VITE_API_URL || '/api';
+const API_BASE = envUrl.endsWith('/') ? envUrl.slice(0, -1) : envUrl;
+
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Устанавливаем путь к воркеру для pdf.js из CDN
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 /**
- * Загружает PDF-резюме и получает извлечённые данные.
+ * Загружает PDF-резюме, парсит его на фронтенде и отправляет текст на бэкенд для извлечения данных.
  */
 export async function uploadResume(file) {
-  const formData = new FormData();
-  formData.append('resume', file);
+  let rawText = '';
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const pageText = content.items.map(item => item.str).join(' ');
+      rawText += pageText + '\n';
+    }
+  } catch (error) {
+    throw new Error('Не удалось прочитать PDF-файл. Убедитесь, что файл не повреждён или не защищён паролем.');
+  }
 
-  const response = await fetch(`${API_BASE}/resume/upload`, {
+  if (!rawText.trim()) {
+    throw new Error('Не удалось извлечь текст из PDF. Возможно, файл содержит только изображения (скан).');
+  }
+
+  const response = await fetch(`${API_BASE}/resume/extract`, {
     method: 'POST',
-    body: formData,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ rawText }),
   });
 
   const data = await response.json();

@@ -53,5 +53,43 @@ router.post('/upload', async (c) => {
     }, 500);
   }
 });
+});
+
+/**
+ * POST /api/resume/extract
+ * Извлекает данные из сырого текста резюме.
+ * 
+ * Request: application/json, { rawText: string }
+ * Response: { success, resumeData: { jobTitle, skills, experience, level, location } }
+ */
+router.post('/extract', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { rawText } = body;
+
+    if (!rawText || typeof rawText !== 'string') {
+      return c.json({
+        success: false,
+        error: 'Отсутствует текст резюме.',
+      }, 400);
+    }
+
+    logger.info(`Получен текст резюме (${rawText.length} символов)`);
+
+    // Extract structured data
+    const resumeData = extractResumeData(rawText);
+
+    return c.json({
+      success: true,
+      resumeData,
+    });
+  } catch (err) {
+    logger.error(`Extract error: ${err.message}`);
+    return c.json({
+      success: false,
+      error: err.message || 'Ошибка обработки текста резюме.',
+    }, 500);
+  }
+});
 
 export default router;

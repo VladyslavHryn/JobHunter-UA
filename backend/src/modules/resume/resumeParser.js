@@ -31,7 +31,7 @@ export async function parseResumePdf(dataBuffer) {
     if (err.message.includes('изображения') || err.message.includes('пуст')) {
       throw err;
     }
-    logger.error(`Ошибка парсинга PDF: ${err.message}`);
-    throw new Error('Не удалось прочитать PDF-файл. Убедитесь, что файл не повреждён.');
+    logger.error(`Ошибка парсинга PDF: ${err.message}\nStack: ${err.stack}`);
+    throw new Error(`Не удалось прочитать PDF-файл. Ошибка: ${err.message}. Убедитесь, что файл не повреждён.`);
   }
 }
