@@ -53,7 +53,6 @@ httpClient.interceptors.response.use(
 
     const status = error.response?.status;
     const isRetryable =
-      status === 403 ||
       status === 429 ||
       status === 503 ||
       error.code === 'ECONNRESET' ||
