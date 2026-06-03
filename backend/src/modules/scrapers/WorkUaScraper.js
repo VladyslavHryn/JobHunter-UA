@@ -52,15 +52,29 @@ export default class WorkUaScraper extends BaseScraper {
       const items = response.data || [];
       logger.info(`[Work.ua] Apify вернул ${items.length} результатов.`);
 
-      return items.map(job => this.normalizeJob({
-        title: job.title || '',
-        company: job.company || '',
-        location: job.location || '',
-        salary: job.salaryRaw || '',
-        description: job.descriptionText || job.descriptionSnippet || '',
-        url: job.url || '',
-        requirements: job.skills ? job.skills.join(', ') : ''
-      }));
+      return items.map(job => {
+        // Перевод базовых городов с русского на украинский
+        let loc = job.location || '';
+        loc = loc.replace(/Киев/g, 'Київ')
+                 .replace(/Днепр/g, 'Дніпро')
+                 .replace(/Харьков/g, 'Харків')
+                 .replace(/Одесса/g, 'Одеса')
+                 .replace(/Львов/g, 'Львів')
+                 .replace(/Запорожье/g, 'Запоріжжя')
+                 .replace(/Николаев/g, 'Миколаїв')
+                 .replace(/Винница/g, 'Вінниця');
+
+        return this.normalizeJob({
+          title: job.title || '',
+          company: job.company || '',
+          location: loc,
+          salary: job.salaryRaw || '',
+          description: job.descriptionText || job.descriptionSnippet || '',
+          url: job.url || '',
+          logo: job.companyLogoUrl || '',
+          requirements: job.skills ? job.skills.join(', ') : ''
+        });
+      });
 
     } catch (error) {
       logger.error(`[Work.ua] Ошибка при вызове Apify API: ${error.message}`);
