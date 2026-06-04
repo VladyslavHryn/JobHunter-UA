@@ -1,61 +1,59 @@
 # JobHunter UA 🚀
 
-Автоматизований пошук роботи в Україні за вашим резюме. Програма аналізує завантажене PDF-резюме (навички, досвід, посаду), а потім паралельно шукає найкращі вакансії на 4 платформах: **Work.ua, Jooble, Robota.ua, та DOU**.
+Automated job search in Ukraine based on your resume. The application parses the uploaded PDF resume (skills, experience, job title), and then simultaneously searches for the best vacancies across 4 platforms: **Work.ua, Jooble, Robota.ua, and DOU**.
 
-Кожна знайдена вакансія оцінюється за 100-бальною шкалою релевантності.
+Each found vacancy is scored on a 100-point relevance scale.
 
 🌍 **Live Demo:** https://jobhunter-frontend-fki6.onrender.com/
 
+## Features
+- 📄 **Smart PDF Parsing** (extracts job title, skills from a 200+ dictionary, and experience using an NLP algorithm).
+- 🕷️ **Modular Scraper Architecture**:
+  - Jooble (via official REST API)
+  - Work.ua (HTML scraping with blockage bypass and User-Agent rotation, or Apify fallback)
+  - Robota.ua (Intercepting internal JSON API + fallback to HTML/RSS)
+  - DOU (Intercepting XHR requests, processing the `/first-job/` category for Juniors)
+- 🎯 **Scoring Engine**: Ranking algorithm based on skill match (45%), job title match (25%), experience (20%), and location (10%), applying penalties for mismatching levels (e.g. Senior vs Intern).
 
-## Особливості
-- 📄 **Розумний парсинг PDF** (вилучення NLP-алгоритмом посади, навичок з 200+ словника, досвіду з дат).
-- 🕷️ **Модульна архітектура скраперів**:
-  - Jooble (через офіційний REST API)
-  - Work.ua (HTML scraping з обходом блокувань та ротацією User-Agent)
-  - Robota.ua (перехоплення внутрішнього JSON API + fallback на HTML)
-  - DOU (перехоплення XHR-запитів, обробка категорії `/first-job/` для Junior)
-- 🎯 **Scoring Engine**: Алгоритм ранжування за збігом навичок (45%), посади (25%), досвіду (20%) та локації (10%), із застосуванням штрафів за невідповідність рівня.
+## Project Structure
+The project is split into two independent parts:
+- `/backend` — Node.js / Express server.
+- `/frontend` — React / Vite client.
 
+## Getting Started
 
-## Структура проекту
-Проект розділений на дві незалежні частини:
-- `/backend` — Node.js / Express сервер.
-- `/frontend` — React / Vite клієнт.
-
-## Інструкція із запуску
-
-### 1. Налаштування Backend
+### 1. Backend Setup
 ```bash
 cd backend
 npm install
 ```
 
-Створіть файл `.env` на основі `.env.example`:
+Create a `.env` file based on `.env.example`:
 ```bash
 cp .env.example .env
 ```
 
-*(Необов'язково)*: Для роботи Jooble додайте ваш `JOOBLE_API_KEY` у файл `.env` (його можна безкоштовно отримати на https://jooble.org/api/about). Без ключа система просто пропустить Jooble і працюватиме з 3 іншими сайтами.
+*(Optional)*: For Jooble to work, add your `JOOBLE_API_KEY` to the `.env` file (you can get it for free at https://jooble.org/api/about). Without the key, the system will simply skip Jooble and work with the 3 other sites.
 
-Запуск сервера (порт 3001 за замовчуванням):
+Run the server (port 3001 by default):
 ```bash
 npm run dev
 ```
 
-### 2. Налаштування Frontend
-В іншому терміналі:
+### 2. Frontend Setup
+In another terminal:
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-### 3. Використання
-1. Відкрийте http://localhost:5173
-2. Завантажте PDF зі своїм резюме.
-3. Перевірте та за потреби виправте розпізнані навички.
-4. Натисніть "Знайти вакансії".
-5. Використовуйте фільтри результатів за містом або платформою.
+### 3. Usage
+1. Open http://localhost:5173
+2. Upload your PDF resume.
+3. Review and, if necessary, correct the recognized skills.
+4. Click "Find jobs".
+5. Use result filters by city or platform.
 
-## Архітектура (Clean / Adapter Pattern)
-Додавання нового сайту для пошуку потребує створення лише одного файлу в `backend/src/modules/scrapers/`, який успадковує `BaseScraper` та реалізує метод `search()`.
+## Architecture (Clean / Adapter Pattern)
+Adding a new job site requires creating just one file in `backend/src/modules/scrapers/`, extending `BaseScraper` and implementing the `search()` method.

@@ -7,7 +7,7 @@ const router = new Hono();
 
 /**
  * POST /api/resume/upload
- * Загружает PDF-резюме, парсит и извлекает данные (in-memory).
+ * Uploads PDF resume, parses and extracts data (in-memory).
  * 
  * Request: multipart/form-data, field "resume" (PDF, max 5MB)
  * Response: { success, resumeData: { jobTitle, skills, experience, level, location } }
@@ -57,7 +57,7 @@ router.post('/upload', async (c) => {
 
 /**
  * POST /api/resume/extract
- * Извлекает данные из сырого текста резюме.
+ * Extracts data from raw resume text.
  * 
  * Request: application/json, { rawText: string }
  * Response: { success, resumeData: { jobTitle, skills, experience, level, location } }

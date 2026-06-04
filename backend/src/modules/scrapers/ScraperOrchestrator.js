@@ -5,22 +5,22 @@ import DouScraper from './DouScraper.js';
 import logger from '../../utils/logger.js';
 
 /**
- * Оркестратор: запускает все адаптеры параллельно через Promise.allSettled(),
- * собирает результаты, дедуплицирует, формирует предупреждения.
+ * Orchestrator: runs all adapters in parallel via Promise.allSettled(),
+ * collects results, deduplicates, and formats warnings.
  */
 export default class ScraperOrchestrator {
   constructor() {
     this.scrapers = [
       new JoobleScraper(),
-      new WorkUaScraper(), // Тепер працює через Apify
+      new WorkUaScraper(), // Now works via Apify
       new RobotaUaScraper(),
       new DouScraper(),
     ];
   }
 
   /**
-   * Запускает поиск по всем источникам.
-   * @param {Object} params — параметры поиска (keywords, location, level, skills, experience)
+   * Starts search across all sources.
+   * @param {Object} params - search parameters (keywords, location, level, skills, experience)
    * @returns {Promise<{ jobs: Object[], warnings: string[], stats: Object }>}
    */
   async searchAll(params, env = {}) {
@@ -80,7 +80,7 @@ export default class ScraperOrchestrator {
   }
 
   /**
-   * Дедупликация по URL и по title+company.
+   * Deduplication by URL and by title+company.
    */
   deduplicateJobs(jobs) {
     const seen = new Map();

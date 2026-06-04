@@ -1,18 +1,18 @@
 import logger from '../../utils/logger.js';
 
 /**
- * Движок скоринга: вычисляет процент релевантности (0–100%)
- * вакансии относительно данных из резюме.
+ * Scoring Engine: calculates relevance percentage (0-100%)
+ * of a vacancy relative to resume data.
  *
- * Факторы:
- *   - Skills Match (45%) — совпадение навыков
- *   - Title Match  (25%) — совпадение позиции
- *   - Experience   (20%) — соответствие опыта
- *   - Location     (10%) — совпадение города
+ * Factors:
+ *   - Skills Match (45%) - skills match
+ *   - Title Match  (25%) - position match
+ *   - Experience   (20%) - experience match
+ *   - Location     (10%) - city match
  *
- * Штрафы:
- *   - Жёсткое требование опыта при нулевом опыте в резюме
- *   - Уровень Senior при Intern в резюме
+ * Penalties:
+ *   - Strict experience requirement with zero resume experience
+ *   - Senior level with Intern resume
  */
 
 const WEIGHTS = {
@@ -23,10 +23,10 @@ const WEIGHTS = {
 };
 
 /**
- * Вычисляет score для каждой вакансии.
- * @param {Object[]} jobs — массив вакансий
- * @param {Object} resumeData — данные из резюме
- * @returns {Object[]} — вакансии с полем `score` (0–100), отсортированные по убыванию
+ * Calculates score for each vacancy.
+ * @param {Object[]} jobs - array of vacancies
+ * @param {Object} resumeData - data from resume
+ * @returns {Object[]} - vacancies with `score` field (0-100), sorted descending
  */
 export function scoreAndRankJobs(jobs, resumeData) {
   logger.info(`Начинаю скоринг ${jobs.length} вакансий...`);
@@ -102,7 +102,7 @@ export function scoreAndRankJobs(jobs, resumeData) {
 }
 
 /**
- * Совпадение навыков: какой % навыков из резюме упоминается в описании вакансии.
+ * Skills match: what % of resume skills are mentioned in vacancy description.
  */
 function calculateSkillsMatch(job, resumeData) {
   if (!resumeData.skills || resumeData.skills.length === 0) {
@@ -132,7 +132,7 @@ function calculateSkillsMatch(job, resumeData) {
 }
 
 /**
- * Совпадение заголовка позиции.
+ * Position title match.
  */
 function calculateTitleMatch(job, resumeData) {
   if (!resumeData.jobTitle) return 40; // No title = low-neutral
@@ -165,7 +165,7 @@ function calculateTitleMatch(job, resumeData) {
 }
 
 /**
- * Соответствие опыта.
+ * Experience match.
  */
 function calculateExperienceMatch(job, resumeData) {
   const jobText = `${job.title} ${job.description} ${job.requirements || ''}`.toLowerCase();
@@ -188,7 +188,7 @@ function calculateExperienceMatch(job, resumeData) {
 }
 
 /**
- * Совпадение локации.
+ * Location match.
  */
 function calculateLocationMatch(job, resumeData) {
   if (!resumeData.location) return 70; // No preference = decent
@@ -216,7 +216,7 @@ function calculateLocationMatch(job, resumeData) {
 }
 
 /**
- * Штрафы за жёсткие несовпадения.
+ * Penalties for severe mismatches.
  */
 function calculatePenalty(job, resumeData) {
   const jobText = `${job.title} ${job.description} ${job.requirements || ''}`.toLowerCase();
@@ -275,7 +275,7 @@ function calculatePenalty(job, resumeData) {
 }
 
 /**
- * Извлекает требуемый опыт из текста вакансии.
+ * Extracts required experience from vacancy text.
  */
 function extractRequiredExperience(text) {
   const patterns = [
@@ -297,7 +297,7 @@ function extractRequiredExperience(text) {
 }
 
 /**
- * Токенизация строки: разбивает на слова, убирает стоп-слова.
+ * String tokenization: splits into words, removes stop words.
  */
 function tokenize(text) {
   const stopWords = new Set([
@@ -314,7 +314,7 @@ function tokenize(text) {
 }
 
 /**
- * Вариации названия навыка для fuzzy matching.
+ * Skill name variations for fuzzy matching.
  */
 function getSkillVariations(skill) {
   const variations = [skill];

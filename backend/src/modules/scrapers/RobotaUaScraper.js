@@ -56,7 +56,7 @@ export default class RobotaUaScraper extends BaseScraper {
   }
 
   // ---------------------------------------------------------------------------
-  // Уровень 1: Публичный JSON API
+  // Level 1: Public JSON API
   // ---------------------------------------------------------------------------
 
   async searchViaApi(params, env = {}) {
@@ -98,7 +98,7 @@ export default class RobotaUaScraper extends BaseScraper {
 
       const response = await httpClient.post(fetchUrl, JSON.stringify(body), fetchOptions);
 
-      // Убеждаемся что ответ — JSON (а не HTML-страница ошибки)
+      // Make sure the response is JSON (not an HTML error page)
       const contentType = response.headers && typeof response.headers.get === 'function' 
         ? response.headers.get('content-type') || ''
         : response.headers['content-type'] || '';
@@ -129,7 +129,7 @@ export default class RobotaUaScraper extends BaseScraper {
 
       logger.info(`[Robota.ua] Страница ${page}: ${vacancies.length} вакансий`);
 
-      // Проверяем, есть ли следующая страница
+      // Check if there is a next page
       const total = data.total || data.totalCount || data.count || 0;
       const pageSize = vacancies.length;
       const fetched = page * (data.pageSize || pageSize) + pageSize;
@@ -163,10 +163,10 @@ export default class RobotaUaScraper extends BaseScraper {
         v.location ||
         '';
 
-      // Формируем URL вакансии
+      // Build vacancy URL
       let url = v.link || v.url || '';
       
-      // Если URL относительный (или пустой), строим его
+      // If URL is relative (or empty), build it
       if (!url && id) {
         const companyId = v.notebookId || v.companyId || v.company?.id || '';
         url = companyId
@@ -206,7 +206,7 @@ export default class RobotaUaScraper extends BaseScraper {
   }
 
   // ---------------------------------------------------------------------------
-  // Уровень 2: RSS fallback
+  // Level 2: RSS fallback
   // ---------------------------------------------------------------------------
 
   async searchViaRss(params, env = {}) {
@@ -252,17 +252,17 @@ export default class RobotaUaScraper extends BaseScraper {
     for (const item of items) {
       const title = this.extractXml(item, 'title');
 
-      // <link> в RSS часто не имеет закрывающего тега — используем <guid> как надёжный fallback
+      // <link> in RSS often lacks a closing tag - use <guid> as a reliable fallback
       let link = this.extractXmlLink(item);
       if (!link) link = this.extractXml(item, 'guid');
 
-      // Декодируем HTML-сущности в URL (&amp; → &)
+      // Decode HTML entities in URL (&amp; → &)
       link = this.decodeHtml(link || '');
 
-      // Очищаем от двойных слэшей в конце
+      // Clear double slashes at the end
       link = (link || '').replace(/\/+$/, '');
 
-      // Гарантируем полный URL
+      // Ensure absolute URL
       if (link && !link.startsWith('http')) {
         link = `${this.baseUrl}${link.startsWith('/') ? '' : '/'}${link}`;
       }
@@ -285,7 +285,7 @@ export default class RobotaUaScraper extends BaseScraper {
       );
     }
 
-    // Диагностика: логируем первый URL чтобы проверить формат
+    // Diagnostic: log the first URL to verify format
     if (jobs.length > 0) {
       logger.info(`[Robota.ua] RSS sample URL: ${jobs[0].url}`);
     }
@@ -294,20 +294,20 @@ export default class RobotaUaScraper extends BaseScraper {
   }
 
   /**
-   * Специальный экстрактор для тега <link> в RSS.
-   * В RSS 2.0 <link> часто не имеет закрывающего тега или записывается нестандартно.
-   * Пробуем несколько паттернов.
+   * Special extractor for <link> tag in RSS.
+   * In RSS 2.0 <link> often lacks a closing tag or is written non-standardly.
+   * Trying several patterns.
    */
   extractXmlLink(xml) {
-    // Паттерн 1: <link>URL</link>
+    // Pattern 1: <link>URL</link>
     let m = xml.match(/<link[^>]*>([^<]+)<\/link>/i);
     if (m?.[1]?.trim()) return m[1].trim();
 
-    // Паттерн 2: <link>URL\n (без закрывающего тега, до следующего тега)
+    // Pattern 2: <link>URL\n (no closing tag, up to next tag)
     m = xml.match(/<link[^>]*>\s*([^\s<][^<]*?)\s*(?:<|$)/i);
     if (m?.[1]?.startsWith('http')) return m[1].trim();
 
-    // Паттерн 3: <atom:link href="URL">
+    // Pattern 3: <atom:link href="URL">
     m = xml.match(/<atom:link[^>]+href=["']([^"']+)["']/i);
     if (m?.[1]) return m[1];
 
@@ -329,7 +329,7 @@ export default class RobotaUaScraper extends BaseScraper {
   }
 
   // ---------------------------------------------------------------------------
-  // Вспомогательные методы
+  // Helper methods
   // ---------------------------------------------------------------------------
 
   formatSalary(v) {
@@ -345,7 +345,7 @@ export default class RobotaUaScraper extends BaseScraper {
   buildKeyword(params) {
     const parts = [];
     if (params.keywords) parts.push(params.keywords);
-    // Не добавляем skills в keyword — иначе запрос становится слишком специфичным
+    // Do not add skills to keyword - otherwise the request becomes too specific
     return parts.join(' ') || 'developer';
   }
 

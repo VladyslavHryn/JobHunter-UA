@@ -6,8 +6,8 @@ import { httpClient, getRandomDelay, sleep } from '../../utils/httpClient.js';
 import axios from 'axios';
 
 /**
- * Адаптер для work.ua — веб-скрапинг через Cheerio.
- * URL-паттерн: https://www.work.ua/jobs-{keyword}/?page={n}
+ * Adapter for work.ua - web scraping via Cheerio.
+ * URL pattern: https://www.work.ua/jobs-{keyword}/?page={n}
  */
 export default class WorkUaScraper extends BaseScraper {
   constructor() {
@@ -56,7 +56,7 @@ export default class WorkUaScraper extends BaseScraper {
       logger.info(`[Work.ua] Apify вернул ${items.length} результатов.`);
 
       return items.map(job => {
-        // Перевод базовых городов с русского на украинский
+        // Translate basic cities from Russian to Ukrainian
         let loc = job.location || '';
         loc = loc.replace(/Киев/g, 'Київ')
                  .replace(/Днепр/g, 'Дніпро')

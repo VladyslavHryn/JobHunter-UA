@@ -9,7 +9,7 @@ const orchestrator = new ScraperOrchestrator();
 
 /**
  * POST /api/search
- * Запускает поиск вакансий по данным из резюме.
+ * Starts job search based on resume data.
  */
 router.post('/', async (c) => {
   try {

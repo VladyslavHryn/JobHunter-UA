@@ -12,8 +12,8 @@ import logger from '../../utils/logger.js';
  *   - Если страница не загрузилась — оставляем оригинальное описание
  */
 
-const BATCH_SIZE  = 15;   // паралельних запитів за раз (збільшено для швидкості)
-const BATCH_DELAY = 50;   // мс між батчами (зменшено для швидкості)
+const BATCH_SIZE  = 15;   // parallel requests at once (increased for speed)
+const BATCH_DELAY = 50;   // ms between batches (decreased for speed)
 const PAGE_TIMEOUT = 8000;
 
 export async function enrichTopJobs(jobs) {
@@ -37,7 +37,7 @@ export async function enrichTopJobs(jobs) {
         enriched.push({ ...job, ...result.value });
         success++;
       } else {
-        // Не загрузилось — оставляем как есть, не роняем весь поиск
+        // Failed to load — leave as is, do not crash the whole search
         enriched.push(job);
         failed++;
       }
@@ -88,14 +88,14 @@ async function fetchFullText(job) {
 function extractText(html, url) {
   const $ = cheerio.load(html);
 
-  // Убираем мусор
+  // Remove garbage
   $('script, style, noscript, iframe, nav, footer, header, .cookie, .banner, .ad').remove();
 
   const hostname = (() => {
     try { return new URL(url).hostname; } catch { return ''; }
   })();
 
-  // Специфичные селекторы для каждого сайта
+  // Specific selectors for each site
   const siteSelectors = {
     'jobs.dou.ua':   ['.vacancy-section', '.b-typo.vacancy-section', '#job-description', '.b-typo'],
     'www.work.ua':   ['#job-description', '.card-body', 'div[id*="description"]'],
@@ -115,11 +115,11 @@ function extractText(html, url) {
     }
   }
 
-  // Общий fallback — ищем самый длинный смысловой блок
+  // General fallback — looking for the longest semantic block
   let bestText = '';
   $('div, article, section, main').each((_, el) => {
     const $el = $(el);
-    // Пропускаем навигацию и шапки
+    // Skip navigation and headers
     if ($el.find('nav, header, ul li').length > 5) return;
     const text = $el.text().trim();
     if (text.length > bestText.length && text.length < 15000) {

@@ -19,7 +19,7 @@ export default function JobCard({ job }) {
   // Generate an avatar if no logo
   const initial = job.company ? job.company.charAt(0).toUpperCase() : '?';
 
-  // Format ISO dates to readable strings (e.g. 26 трав 2026)
+  // Format ISO dates to readable strings (e.g. 26 May 2026)
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
     const date = new Date(dateStr);

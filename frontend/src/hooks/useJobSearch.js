@@ -63,7 +63,7 @@ function extractCities(locationString) {
 }
 
 /**
- * Custom hook: управление полным циклом поиска вакансий.
+ * Custom hook: manages the full job search lifecycle.
  * States: idle → uploading → parsed → searching → done / error
  */
 export function useJobSearch() {
@@ -81,7 +81,7 @@ export function useJobSearch() {
   });
 
   /**
-   * Шаг 1: Загрузка резюме
+   * Step 1: Upload resume
    */
   const handleUpload = useCallback(async (file) => {
     try {
@@ -103,7 +103,7 @@ export function useJobSearch() {
   }, []);
 
   /**
-   * Шаг 2: Запуск поиска
+   * Step 2: Start search
    */
   const handleSearch = useCallback(async (overrides = null) => {
     if (!resumeData && !overrides) {
@@ -129,7 +129,7 @@ export function useJobSearch() {
   }, [resumeData]);
 
   /**
-   * Клиентская фильтрация (мгновенная, без запросов)
+   * Client-side filtering (instant, no requests)
    */
   const filteredJobs = useMemo(() => {
     let result = [...jobs];
@@ -167,7 +167,7 @@ export function useJobSearch() {
   }, [jobs, filters]);
 
   /**
-   * Уникальные города из результатов (для фильтра)
+   * Unique cities from results (for filter)
    */
   const availableCities = useMemo(() => {
     const cities = new Set();
@@ -181,7 +181,7 @@ export function useJobSearch() {
   }, [jobs]);
 
   /**
-   * Уникальные источники из результатов
+   * Unique sources from results
    */
   const availableSources = useMemo(() => {
     const sources = new Set();

@@ -95,7 +95,7 @@ const LEVEL_KEYWORDS = {
 // ──────────────────────────────────────────────
 
 /**
- * Извлекает желаемую позицию из текста резюме
+ * Extracts the desired position from the resume text
  */
 function extractJobTitle(text) {
   // Try explicit headers first
@@ -128,7 +128,7 @@ function extractJobTitle(text) {
 }
 
 /**
- * Извлекает технические навыки
+ * Extracts technical skills
  */
 function extractSkills(text) {
   const found = new Set();
@@ -158,10 +158,10 @@ function extractSkills(text) {
 }
 
 /**
- * Извлекает опыт работы в годах
+ * Extracts work experience in years
  */
 function extractExperience(text) {
-  // Direct statements: "5 years of experience", "опыт работы 3 года"
+  // Direct statements: "5 years of experience", "3 years of experience"
   const directPatterns = [
     /(\d+)\+?\s*(?:years?|лет|год(?:а|ов)?|рок(?:ів|и|у)?)\s*(?:of\s+)?(?:experience|опыт|досвід)/i,
     /(?:experience|опыт|досвід)\s*[:\-—]?\s*(\d+)\+?\s*(?:years?|лет|год(?:а|ов)?|рок(?:ів|и|у)?)/i,
@@ -209,7 +209,7 @@ function extractExperience(text) {
 }
 
 /**
- * Определяет уровень (Intern/Junior/Middle/Senior/Lead)
+ * Determines the level (Intern/Junior/Middle/Senior/Lead)
  */
 function extractLevel(text, experience) {
   const lowerText = text.toLowerCase();
@@ -234,7 +234,7 @@ function extractLevel(text, experience) {
 }
 
 /**
- * Извлекает город или Remote
+ * Extracts city or Remote
  */
 function extractLocation(text) {
   const lowerText = text.toLowerCase();
@@ -298,9 +298,9 @@ function extractLocation(text) {
 // ──────────────────────────────────────────────
 
 /**
- * Извлекает структурированные данные из текста резюме.
- * @param {string} rawText — текст, извлечённый из PDF
- * @returns {Object} — структурированные данные резюме
+ * Extracts structured data from the resume text.
+ * @param {string} rawText - text extracted from PDF
+ * @returns {Object} - structured resume data
  */
 export function extractResumeData(rawText) {
   logger.info('Начинаю извлечение данных из текста резюме...');

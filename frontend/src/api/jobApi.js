@@ -4,11 +4,11 @@ const API_BASE = envUrl.endsWith('/') ? envUrl.slice(0, -1) : envUrl;
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.mjs?url';
 
-// Устанавливаем локальный воркер, собранный Vite
+// Set local worker built by Vite
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 /**
- * Загружает PDF-резюме, парсит его на фронтенде и отправляет текст на бэкенд для извлечения данных.
+ * Uploads a PDF resume, parses it on the frontend and sends text to the backend to extract data.
  */
 export async function uploadResume(file) {
   let rawText = '';
@@ -47,7 +47,7 @@ export async function uploadResume(file) {
 }
 
 /**
- * Запускает поиск вакансий.
+ * Starts searching for jobs.
  */
 export async function searchJobs(resumeData, overrides = null) {
   const response = await fetch(`${API_BASE}/search`, {

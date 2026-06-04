@@ -2,9 +2,9 @@ import pdf from 'pdf-parse';
 import logger from '../../utils/logger.js';
 
 /**
- * Парсит PDF-файл из буфера в памяти.
- * @param {Buffer} dataBuffer — данные PDF-файла
- * @returns {Promise<string>} — текст резюме
+ * Parses a PDF file from an in-memory buffer.
+ * @param {Buffer} dataBuffer - PDF file data
+ * @returns {Promise<string>} - resume text
  */
 export async function parseResumePdf(dataBuffer) {
   logger.info(`Начинаю парсинг PDF (размер: ${dataBuffer.byteLength} байт)`);
