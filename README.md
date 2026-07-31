@@ -6,6 +6,9 @@ Each found vacancy is scored on a 100-point relevance scale.
 
 🌍 **Live Demo:** https://jobhunter-frontend-fki6.onrender.com/
 
+
+<img width="1916" height="971" alt="image" src="https://github.com/user-attachments/assets/43c4233e-07f4-43ef-8ec2-1422631f59f2" />
+
 ## Features
 - 📄 **Smart PDF Parsing** (extracts job title, skills from a 200+ dictionary, and experience using an NLP algorithm).
 - 🕷️ **Modular Scraper Architecture**:
